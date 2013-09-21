@@ -1,9 +1,7 @@
 package com.dreamtale.pintrestlike;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Set;
-import java.util.zip.Inflater;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -65,7 +63,7 @@ public class BluetoothDeviceListActivity extends Activity
         Set<BluetoothDevice> devices = bluetoothAdapter.getBondedDevices();
         if (devices.size() > 0)
         {
-            devices.addAll(devices);
+            this.devices.addAll(devices);
         }
         else
         {
@@ -92,7 +90,12 @@ public class BluetoothDeviceListActivity extends Activity
         public void onItemClick(AdapterView<?> parent, View view, int position,
                 long id)
         {
+            bluetoothAdapter.cancelDiscovery();
             
+            Intent intent = new Intent();
+            intent.putExtra(IntentConstant.EXTRA_BLUETOOTH_ADDRESS, devices.get(position).getAddress());
+            setResult(RESULT_OK, intent);
+            finish();
         }
     };
     

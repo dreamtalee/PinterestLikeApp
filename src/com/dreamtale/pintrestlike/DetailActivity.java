@@ -1,21 +1,29 @@
 package com.dreamtale.pintrestlike;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Set;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.View.OnTouchListener;
 import android.widget.Toast;
+
+import com.dreamtale.pintrestlike.share.BluetoothService;
 
 public class DetailActivity extends FragmentActivity
 {
@@ -25,6 +33,8 @@ public class DetailActivity extends FragmentActivity
     private static final int BLUETOOTH_INTENT_DISCOVERABLE_REQUEST_CODE = 0x02;
     private static final int BLUETOOTH_INTENT_SCAN_REQUEST_CODE = 0x03;
     
+    private BluetoothAdapter bluetoothAdapter = null;
+    private BluetoothService bluetoothService = null;
     private ViewPager viewPager = null;
     
     @Override
@@ -36,25 +46,54 @@ public class DetailActivity extends FragmentActivity
         ImagePageAdapter adapter = new ImagePageAdapter(getSupportFragmentManager(), ImageInfoProvider.getInstance().getDataList());
         viewPager.setAdapter(adapter);
         viewPager.setOffscreenPageLimit(1);
+        viewPager.setClickable(true);
+        final GestureDetector detector = new GestureDetector(this, listener);
+        viewPager.setOnTouchListener(new OnTouchListener()
+        {
+            @Override
+            public boolean onTouch(View v, MotionEvent event)
+            {
+                return detector.onTouchEvent(event);
+            }
+        });
         
         final int position = getIntent().getIntExtra(IntentConstant.EXTRA_IMAGE_DETAIL_FRAGMENT_POSITION, -1);
         if (-1 != position)
         {
             viewPager.setCurrentItem(position);
         }
-        
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        bluetoothService = new BluetoothService(dataHandler);
     }
+    
+    private GestureDetector.SimpleOnGestureListener listener = new GestureDetector.SimpleOnGestureListener()
+    {
+        public boolean onSingleTapUp(MotionEvent e)
+        {
+            String test = "hello from " + bluetoothAdapter.getName();
+            bluetoothService.write(test.getBytes());
+            return true;
+        };
+    };
     
     @Override
     protected void onStart()
     {
         super.onStart();
+        bluetoothService.start();
     }
     
     @Override
     protected void onStop()
     {
+        bluetoothService.clearThread();
         super.onStop();
+    }
+    
+    @Override
+    protected void onDestroy()
+    {
+        super.onDestroy();
     }
     
     @Override
@@ -90,6 +129,25 @@ public class DetailActivity extends FragmentActivity
         }
         return true;
     }
+    
+    private Handler dataHandler = new Handler()
+    {
+        public void dispatchMessage(android.os.Message msg)
+        {
+            switch (msg.what)
+            {
+            case BluetoothService.MSG_BLUETOOTH_READ:
+                ByteBuffer data = (ByteBuffer)msg.obj;
+                int length = msg.arg1;
+                String s = new String(data.array(), 0, length);
+                Toast.makeText(DetailActivity.this, s, Toast.LENGTH_SHORT).show();
+                break;
+
+            default:
+                break;
+            }
+        };
+    };
     
     static class ImagePageAdapter extends FragmentPagerAdapter
     {
@@ -140,7 +198,12 @@ public class DetailActivity extends FragmentActivity
         case BLUETOOTH_INTENT_SCAN_REQUEST_CODE:
             if (Activity.RESULT_OK == resultCode)
             {
-                
+                String macAddr = data.getStringExtra(IntentConstant.EXTRA_BLUETOOTH_ADDRESS);
+                if (!TextUtils.isEmpty(macAddr))
+                {
+                    BluetoothDevice device = bluetoothAdapter.getRemoteDevice(macAddr);
+                    bluetoothService.connect(device);
+                }
             }
             break;
         default:

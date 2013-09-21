@@ -3,8 +3,6 @@ package com.dreamtale.pintrestlike.share;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
@@ -25,6 +23,10 @@ public class BluetoothService
     
     private static final UUID SDP_UUID = UUID.fromString("8ce255c0-200a-11e0-ac64-0800200c9a66");
     
+    private static final int STATE_NONE = 0x01;
+    private static final int STATE_CONNECTED = 0x02;
+    
+    private int state = STATE_NONE;
     private BluetoothAdapter adapter = null;
     
     private Handler handler = null;
@@ -53,6 +55,7 @@ public class BluetoothService
     
     public void start()
     {
+        Log.d(TAG, "-------bluetooth service started--------");
         Log.d(TAG, "start bluetooth service");
         clearThread();
         acceptThread = new AcceptThread();
@@ -61,13 +64,25 @@ public class BluetoothService
     
     private void manageSocket(BluetoothSocket socket)
     {
-        Log.d(TAG, "start manage socket");
-        clearThread();
+        setState(STATE_CONNECTED);
+        Log.d(TAG, "-------bluetooth service manage data socket--------");
+        
+//        if (null != acceptThread)
+//        {
+//            acceptThread.cancel();
+//            acceptThread = null;
+//        }
+//        if (null != connectThread)
+//        {
+//            connectThread.cancel();
+//            connectThread = null;
+//        }
+        
         dataThread = new DataThread(socket);
         dataThread.start();
     }
     
-    private void clearThread()
+    public void clearThread()
     {
         if (null != acceptThread)
         {
@@ -84,6 +99,27 @@ public class BluetoothService
             dataThread.cancel();
             dataThread = null;
         }
+        setState(STATE_NONE);
+    }
+    
+    public void write(byte[] data)
+    {
+        if (state == STATE_CONNECTED)
+        {
+            String log = new String(data);
+            Log.d(TAG, "write data " + log);
+            dataThread.write(data);
+        }
+    }
+    
+    public int getState()
+    {
+        return state;
+    }
+    
+    public void setState(int state)
+    {
+        this.state = state;
     }
     
     class AcceptThread extends Thread
@@ -100,6 +136,7 @@ public class BluetoothService
             }
             catch (IOException e)
             {
+                Log.d(TAG, "-------AcceptThread listenUsingInsecureRfcommWithServiceRecord cause exception--------" + e.toString());
                 e.printStackTrace();
             }
             serverSocket = tmp;
@@ -109,29 +146,27 @@ public class BluetoothService
         public void run()
         {
             BluetoothSocket socket = null;
-            while (true)
+            try
             {
-                try
-                {
-                    socket = serverSocket.accept();
-                }
-                catch (IOException e)
-                {
-                    e.printStackTrace();
-                    break;
-                }
-                
-                if (null != socket)
-                {
-                    // Manage the socket.
-                    manageSocket(socket);
-                    cancel();
-                }
+                socket = serverSocket.accept();
+            }
+            catch (IOException e)
+            {
+                Log.d(TAG, "-------AcceptThread accept cause exception--------" + e.toString());
+                e.printStackTrace();
+            }
+            
+            if (null != socket)
+            {
+                // Manage the socket.
+                manageSocket(socket);
+                cancel();
             }
         }
         
         public void cancel()
         {
+            Log.d(TAG, "-------AcceptThread calceled--------");
             if (null != serverSocket)
             {
                 try
@@ -140,6 +175,7 @@ public class BluetoothService
                 }
                 catch (IOException e)
                 {
+                    Log.d(TAG, "-------AcceptThread cancel cause exception--------" + e.toString());
                     e.printStackTrace();
                 }
             }
@@ -157,40 +193,15 @@ public class BluetoothService
            BluetoothSocket tmp = null;
            this.device = device;
            try
-            {
-               tmp = device.createInsecureRfcommSocketToServiceRecord(SDP_UUID);
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
-//        Method m;
-//        try
-//        {
-//            m = device.getClass().getMethod("createRfcommSocket", new Class[] { int.class });
-//            tmp = (BluetoothSocket) m.invoke(device, 1);
-//        }
-//        catch (NoSuchMethodException e)
-//        {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
-//        catch (IllegalArgumentException e)
-//        {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
-//        catch (IllegalAccessException e)
-//        {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
-//        catch (InvocationTargetException e)
-//        {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
-        socket = tmp;
+           {
+              tmp = device.createInsecureRfcommSocketToServiceRecord(SDP_UUID);
+           }
+           catch (IOException e)
+           {
+               Log.d(TAG, "-------ConnectThread createInsecureRfcommSocketToServiceRecord cause exception--------" + e.toString());
+               e.printStackTrace();
+           }
+           socket = tmp;
         }
         
         @Override
@@ -201,10 +212,11 @@ public class BluetoothService
             try
             {
                 socket.connect();
-                Log.d(TAG, "---------------connect success -------------------");
+                Log.d(TAG, "-------ConnectThread connect success--------");
             }
             catch (IOException e)
             {
+                Log.d(TAG, "-------ConnectThread connect cause exception--------" + e.toString());
                 e.printStackTrace();
                 cancel();
                 return;
@@ -216,6 +228,7 @@ public class BluetoothService
         
         public void cancel()
         {
+            Log.d(TAG, "-------ConnectThread calceled--------");
             if (null != socket)
             {
                 try
@@ -224,6 +237,7 @@ public class BluetoothService
                 }
                 catch (IOException e)
                 {
+                    Log.d(TAG, "-------ConnectThread cancel cause exception--------" + e.toString());
                     e.printStackTrace();
                 }
             }
@@ -248,6 +262,7 @@ public class BluetoothService
             }
             catch (IOException e)
             {
+                Log.d(TAG, "-------DataThread getInputStream/getOutputStream cause exception--------" + e.toString());
                 e.printStackTrace();
                 cancel();
             }
@@ -258,14 +273,19 @@ public class BluetoothService
         {
             while (true)
             {
-                ByteBuffer data = ByteBuffer.allocate(1024);
                 try
                 {
-                    int count = is.read(data.array());
-                    handler.obtainMessage(MSG_BLUETOOTH_READ, count, -1, data);
+                    if (is.available() > 0)
+                    {
+                        Log.d(TAG, "-------DataThread read--------");
+                        ByteBuffer data = ByteBuffer.allocate(1024);
+                        int count = is.read(data.array());
+                        handler.obtainMessage(MSG_BLUETOOTH_READ, count, -1, data).sendToTarget();
+                    }
                 }
                 catch (IOException e)
                 {
+                    Log.d(TAG, "-------DataThread read cause exception--------" + e.toString());
                     e.printStackTrace();
                     cancel();
                     break;
@@ -275,12 +295,14 @@ public class BluetoothService
         
         public void write(byte[] data)
         {
+            Log.d(TAG, "-------DataThread write--------");
             try
             {
                 os.write(data);
             }
             catch (IOException e)
             {
+                Log.d(TAG, "-------DataThread write cause exception--------" + e.toString());
                 e.printStackTrace();
                 cancel();
             }
@@ -288,6 +310,7 @@ public class BluetoothService
         
         public void cancel()
         {
+            Log.d(TAG, "-------DataThread calceled--------");
             if (null != socket)
             {
                 try
@@ -296,6 +319,7 @@ public class BluetoothService
                 }
                 catch (IOException e)
                 {
+                    Log.d(TAG, "-------DataThread cancel cause exception--------" + e.toString());
                     e.printStackTrace();
                 }
             }
