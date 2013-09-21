@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothAdapter;
@@ -16,6 +17,7 @@ import android.util.Log;
 public class BluetoothService
 {
     public static final int MSG_BLUETOOTH_READ = 0x01;
+    public static final int MSG_BLUTHTOOTH_STATE_CHANGE = 0x02;
     
     private static final String TAG = "BluetoothService";
     
@@ -23,22 +25,43 @@ public class BluetoothService
     
     private static final UUID SDP_UUID = UUID.fromString("8ce255c0-200a-11e0-ac64-0800200c9a66");
     
-    private static final int STATE_NONE = 0x01;
-    private static final int STATE_CONNECTED = 0x02;
+    public static final int STATE_NONE = 0x01;
+    public static final int STATE_CONNECTING = 0x02;
+    public static final int STATE_CONNECTED = 0x03;
     
     private int state = STATE_NONE;
+    
+    private static BluetoothService service = null;
     private BluetoothAdapter adapter = null;
     
-    private Handler handler = null;
+    private ArrayList<Handler> handlers = new ArrayList<Handler>();
     
     private AcceptThread acceptThread = null;
     private ConnectThread connectThread = null;
     private DataThread dataThread = null;
     
-    public BluetoothService(Handler handler)
+    private BluetoothService()
     {
         adapter = BluetoothAdapter.getDefaultAdapter();
-        this.handler = handler;
+    }
+    
+    public static BluetoothService getInstance()
+    {
+        if (null == service)
+        {
+            service = new BluetoothService();
+        }
+        return service;
+    }
+    
+    public void addHandler(Handler handler)
+    {
+        handlers.add(handler);
+    }
+    
+    public void removeHandler(Handler handler)
+    {
+        handlers.remove(handler);
     }
     
     public void connect(BluetoothDevice device)
@@ -51,6 +74,7 @@ public class BluetoothService
         
         connectThread = new ConnectThread(device);
         connectThread.start();
+        setState(STATE_CONNECTING);
     }
     
     public void start()
@@ -62,27 +86,27 @@ public class BluetoothService
         acceptThread.start();
     }
     
-    private void manageSocket(BluetoothSocket socket)
+    private synchronized void manageSocket(BluetoothSocket socket)
     {
-        setState(STATE_CONNECTED);
         Log.d(TAG, "-------bluetooth service manage data socket--------");
         
-//        if (null != acceptThread)
-//        {
-//            acceptThread.cancel();
-//            acceptThread = null;
-//        }
-//        if (null != connectThread)
-//        {
-//            connectThread.cancel();
-//            connectThread = null;
-//        }
+        if (null != acceptThread)
+        {
+            acceptThread.cancel();
+            acceptThread = null;
+        }
+        if (null != connectThread)
+        {
+            connectThread.cancel();
+            connectThread = null;
+        }
         
         dataThread = new DataThread(socket);
         dataThread.start();
+        setState(STATE_CONNECTED);
     }
     
-    public void clearThread()
+    public synchronized void clearThread()
     {
         if (null != acceptThread)
         {
@@ -102,7 +126,7 @@ public class BluetoothService
         setState(STATE_NONE);
     }
     
-    public void write(byte[] data)
+    public synchronized void write(byte[] data)
     {
         if (state == STATE_CONNECTED)
         {
@@ -120,6 +144,14 @@ public class BluetoothService
     public void setState(int state)
     {
         this.state = state;
+        
+        if (!handlers.isEmpty())
+        {
+            for (Handler handler : handlers)
+            {
+                handler.obtainMessage(MSG_BLUTHTOOTH_STATE_CHANGE, state, -1).sendToTarget();
+            }
+        }
     }
     
     class AcceptThread extends Thread
@@ -160,7 +192,7 @@ public class BluetoothService
             {
                 // Manage the socket.
                 manageSocket(socket);
-                cancel();
+//                cancel();
             }
         }
         
@@ -218,10 +250,15 @@ public class BluetoothService
             {
                 Log.d(TAG, "-------ConnectThread connect cause exception--------" + e.toString());
                 e.printStackTrace();
+                setState(STATE_NONE);
                 cancel();
                 return;
             }
             
+            synchronized (BluetoothService.this)
+            {
+                connectThread = null;
+            }
             // Manage the socket.
             manageSocket(socket);
         }
@@ -280,7 +317,13 @@ public class BluetoothService
                         Log.d(TAG, "-------DataThread read--------");
                         ByteBuffer data = ByteBuffer.allocate(1024);
                         int count = is.read(data.array());
-                        handler.obtainMessage(MSG_BLUETOOTH_READ, count, -1, data).sendToTarget();
+                        if (!handlers.isEmpty())
+                        {
+                            for (Handler handler : handlers)
+                            {
+                                handler.obtainMessage(MSG_BLUETOOTH_READ, count, -1, data).sendToTarget();
+                            }
+                        }
                     }
                 }
                 catch (IOException e)

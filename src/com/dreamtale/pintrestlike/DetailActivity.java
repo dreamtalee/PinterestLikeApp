@@ -63,7 +63,7 @@ public class DetailActivity extends FragmentActivity
             viewPager.setCurrentItem(position);
         }
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        bluetoothService = new BluetoothService(dataHandler);
+        bluetoothService = BluetoothService.getInstance();
     }
     
     private GestureDetector.SimpleOnGestureListener listener = new GestureDetector.SimpleOnGestureListener()
@@ -80,14 +80,19 @@ public class DetailActivity extends FragmentActivity
     protected void onStart()
     {
         super.onStart();
-        bluetoothService.start();
+        bluetoothService.addHandler(dataHandler);
+        if (bluetoothAdapter.isEnabled())
+        {
+            bluetoothService.start();
+        }
     }
     
     @Override
     protected void onStop()
     {
-        bluetoothService.clearThread();
         super.onStop();
+        bluetoothService.clearThread();
+        bluetoothService.removeHandler(dataHandler);
     }
     
     @Override
@@ -138,9 +143,12 @@ public class DetailActivity extends FragmentActivity
             {
             case BluetoothService.MSG_BLUETOOTH_READ:
                 ByteBuffer data = (ByteBuffer)msg.obj;
-                int length = msg.arg1;
-                String s = new String(data.array(), 0, length);
-                Toast.makeText(DetailActivity.this, s, Toast.LENGTH_SHORT).show();
+                if (null != data)
+                {
+                    int length = msg.arg1;
+                    String s = new String(data.array(), 0, length);
+                    Toast.makeText(DetailActivity.this, s, Toast.LENGTH_SHORT).show();
+                }
                 break;
 
             default:
@@ -181,6 +189,8 @@ public class DetailActivity extends FragmentActivity
         case BLUETOOTH_INTENT_ENABLE_REQUEST_CODE:
             if (Activity.RESULT_OK == resultCode)
             {
+                bluetoothService.start();
+                
                 Intent intent = new Intent();
                 intent.setClass(this, BluetoothDeviceListActivity.class);
                 startActivityForResult(intent, BLUETOOTH_INTENT_SCAN_REQUEST_CODE);
@@ -192,7 +202,7 @@ public class DetailActivity extends FragmentActivity
             }
             break;
         case BLUETOOTH_INTENT_DISCOVERABLE_REQUEST_CODE:
-            
+            bluetoothService.start();
             break;
             
         case BLUETOOTH_INTENT_SCAN_REQUEST_CODE:

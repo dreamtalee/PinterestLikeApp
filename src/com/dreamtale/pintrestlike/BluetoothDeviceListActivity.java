@@ -3,6 +3,8 @@ package com.dreamtale.pintrestlike;
 import java.util.ArrayList;
 import java.util.Set;
 
+import com.dreamtale.pintrestlike.share.BluetoothService;
+
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -11,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -25,10 +28,13 @@ import android.widget.TextView;
 
 public class BluetoothDeviceListActivity extends Activity
 {
+    
     private Button scanBtn = null;
     private ListView deviceListView = null;
     private ProgressBar progressBar = null;
+    private TextView statusView = null;
     
+    private BluetoothService bluetoothService = null;
     private BluetoothAdapter bluetoothAdapter = null;
     private ArrayList<BluetoothDevice> devices = null;
     private DeviceAdapter deviceAdapter = null;
@@ -41,15 +47,41 @@ public class BluetoothDeviceListActivity extends Activity
         initViews();
         
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        bluetoothService = BluetoothService.getInstance();
         
         initDevices();
     }
+    
+    private Handler uiHandler = new Handler()
+    {
+        public void dispatchMessage(android.os.Message msg)
+        {
+            if (BluetoothService.MSG_BLUTHTOOTH_STATE_CHANGE == msg.what)
+            {
+                switch (msg.arg1)
+                {
+                case BluetoothService.STATE_NONE:
+                    statusView.setText("Not connected");
+                    break;
+                case BluetoothService.STATE_CONNECTING:
+                    statusView.setText("Connecting...");
+                    break;
+                case BluetoothService.STATE_CONNECTED:
+                    statusView.setText("Connected");
+                    break;
+                default:
+                    break;
+                }
+            }
+        };
+    };
     
     private void initViews()
     {
         scanBtn = (Button)findViewById(R.id.scan);
         deviceListView = (ListView)findViewById(R.id.devicelist);
         progressBar = (ProgressBar)findViewById(R.id.progress);
+        statusView = (TextView)findViewById(R.id.connectstatus);
         scanBtn.setOnClickListener(scanListener);
         deviceListView.setOnItemClickListener(itemClickListener);
     }
@@ -92,10 +124,12 @@ public class BluetoothDeviceListActivity extends Activity
         {
             bluetoothAdapter.cancelDiscovery();
             
-            Intent intent = new Intent();
-            intent.putExtra(IntentConstant.EXTRA_BLUETOOTH_ADDRESS, devices.get(position).getAddress());
-            setResult(RESULT_OK, intent);
-            finish();
+            bluetoothService.connect(devices.get(position));
+            
+//            Intent intent = new Intent();
+//            intent.putExtra(IntentConstant.EXTRA_BLUETOOTH_ADDRESS, devices.get(position).getAddress());
+//            setResult(RESULT_OK, intent);
+//            finish();
         }
     };
     
@@ -112,6 +146,7 @@ public class BluetoothDeviceListActivity extends Activity
     protected void onStart()
     {
         super.onStart();
+        bluetoothService.addHandler(uiHandler);
         registerBlueToothFound();
     }
     
@@ -119,6 +154,7 @@ public class BluetoothDeviceListActivity extends Activity
     protected void onStop()
     {
         super.onStop();
+        bluetoothService.removeHandler(uiHandler);
         unRegisterBlueToothFound();
         bluetoothAdapter.cancelDiscovery();
     }
