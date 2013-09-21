@@ -10,7 +10,8 @@
         android:maxSdkVersion="18" />
 
     <uses-permission android:name="android.permission.INTERNET" />
-    
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
     
     <application
         android:allowBackup="true"
@@ -35,6 +36,11 @@
         <activity
             android:theme="@android:style/Theme.Holo.Light"
             android:name="com.dreamtale.pintrestlike.DetailActivity">
+        </activity>
+        <activity
+            android:theme="@android:style/Theme.Holo.Light.Dialog"
+            android:label="Pick a device"
+            android:name="com.dreamtale.pintrestlike.BluetoothDeviceListActivity">
         </activity>
     </application>
 
