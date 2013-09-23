@@ -10,7 +10,7 @@
         android:layout_centerInParent="true"
         />
 
-    <com.dreamtale.pintrestlike.ItemView
+    <com.dreamtale.pintrestlike.widget.ItemView
         android:id="@+id/imageView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

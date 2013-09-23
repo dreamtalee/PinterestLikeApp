@@ -1,4 +1,4 @@
-package com.dreamtale.pintrestlike;
+package com.dreamtale.pintrestlike.utils;
 
 import java.io.IOException;
 import java.io.InputStream;

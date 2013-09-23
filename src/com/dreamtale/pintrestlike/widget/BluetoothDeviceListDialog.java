@@ -1,4 +1,4 @@
-package com.dreamtale.pintrestlike;
+package com.dreamtale.pintrestlike.widget;
 
 import java.util.Set;
 

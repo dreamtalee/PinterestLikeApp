@@ -1,4 +1,4 @@
-package com.dreamtale.pintrestlike;
+package com.dreamtale.pintrestlike.utils;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -12,6 +12,8 @@ import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
+
+import com.dreamtale.pintrestlike.widget.ItemView;
 
 public class ImageDownloader extends AsyncTask<String, Void, Bitmap>
 {

@@ -1,6 +1,7 @@
-package com.dreamtale.pintrestlike;
+package com.dreamtale.pintrestlike.data;
 
 import java.util.ArrayList;
+
 
 public class ImageInfoProvider
 {

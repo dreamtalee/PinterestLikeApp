@@ -1,4 +1,4 @@
-package com.dreamtale.pintrestlike;
+package com.dreamtale.pintrestlike.parser;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -14,6 +14,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.text.TextUtils;
+
+import com.dreamtale.pintrestlike.data.ImageInfo;
 
 
 public class ImageParser

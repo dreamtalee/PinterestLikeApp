@@ -1,4 +1,4 @@
-package com.dreamtale.pintrestlike;
+package com.dreamtale.pintrestlike.activity;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -20,11 +20,16 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnTouchListener;
+import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.dreamtale.pintrestlike.R;
+import com.dreamtale.pintrestlike.data.ImageInfo;
+import com.dreamtale.pintrestlike.data.ImageInfoProvider;
+import com.dreamtale.pintrestlike.fragment.ImageDetailFragment;
 import com.dreamtale.pintrestlike.share.BluetoothService;
+import com.dreamtale.pintrestlike.utils.IntentConstant;
 
 public class DetailActivity extends FragmentActivity
 {

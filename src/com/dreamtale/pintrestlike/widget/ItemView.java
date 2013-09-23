@@ -1,9 +1,13 @@
-package com.dreamtale.pintrestlike;
+package com.dreamtale.pintrestlike.widget;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.AttributeSet;
 import android.widget.ImageView;
+
+import com.dreamtale.pintrestlike.data.ImageInfo;
+import com.dreamtale.pintrestlike.utils.CacheManager;
+import com.dreamtale.pintrestlike.utils.ImageDownloader;
 
 public class ItemView extends ImageView
 {

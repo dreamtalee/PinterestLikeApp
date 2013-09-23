@@ -1,4 +1,5 @@
-package com.dreamtale.pintrestlike;
+package com.dreamtale.pintrestlike.utils;
+
 
 import android.graphics.Bitmap;
 import android.util.Log;

@@ -1,4 +1,4 @@
-package com.dreamtale.pintrestlike;
+package com.dreamtale.pintrestlike.fragment;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -7,6 +7,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.dreamtale.pintrestlike.R;
+import com.dreamtale.pintrestlike.data.ImageInfo;
+import com.dreamtale.pintrestlike.utils.ImageDownloader;
+import com.dreamtale.pintrestlike.widget.ItemView;
 
 public class ImageDetailFragment extends Fragment
 {

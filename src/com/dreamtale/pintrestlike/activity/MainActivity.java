@@ -1,4 +1,4 @@
-package com.dreamtale.pintrestlike;
+package com.dreamtale.pintrestlike.activity;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -23,6 +23,17 @@ import android.widget.LinearLayout;
 import android.widget.SearchView;
 import android.widget.SearchView.OnQueryTextListener;
 import android.widget.Toast;
+
+import com.dreamtale.pintrestlike.R;
+import com.dreamtale.pintrestlike.data.ImageAdapter;
+import com.dreamtale.pintrestlike.data.ImageInfo;
+import com.dreamtale.pintrestlike.data.ImageInfoProvider;
+import com.dreamtale.pintrestlike.parser.ImageParser;
+import com.dreamtale.pintrestlike.utils.CacheManager;
+import com.dreamtale.pintrestlike.utils.IntentConstant;
+import com.dreamtale.pintrestlike.utils.UIConfig;
+import com.dreamtale.pintrestlike.widget.ItemView;
+import com.dreamtale.pintrestlike.widget.PinterestScrollView;
 
 public class MainActivity extends Activity
 {

@@ -1,4 +1,4 @@
-package com.dreamtale.pintrestlike;
+package com.dreamtale.pintrestlike.data;
 
 import java.util.ArrayList;
 
@@ -10,6 +10,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.BaseAdapter;
+
+import com.dreamtale.pintrestlike.R;
+import com.dreamtale.pintrestlike.utils.UIConfig;
+import com.dreamtale.pintrestlike.widget.ItemView;
 
 public class ImageAdapter extends BaseAdapter
 {

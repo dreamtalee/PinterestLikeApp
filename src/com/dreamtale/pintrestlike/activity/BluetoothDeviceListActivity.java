@@ -1,9 +1,7 @@
-package com.dreamtale.pintrestlike;
+package com.dreamtale.pintrestlike.activity;
 
 import java.util.ArrayList;
 import java.util.Set;
-
-import com.dreamtale.pintrestlike.share.BluetoothService;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -25,6 +23,9 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import com.dreamtale.pintrestlike.R;
+import com.dreamtale.pintrestlike.share.BluetoothService;
 
 public class BluetoothDeviceListActivity extends Activity
 {
