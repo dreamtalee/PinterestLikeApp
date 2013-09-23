@@ -20,6 +20,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.View.OnTouchListener;
 import android.widget.Toast;
 
@@ -36,6 +37,7 @@ public class DetailActivity extends FragmentActivity
     private BluetoothAdapter bluetoothAdapter = null;
     private BluetoothService bluetoothService = null;
     private ViewPager viewPager = null;
+    private ImagePageAdapter adapter = null;
     
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -43,7 +45,8 @@ public class DetailActivity extends FragmentActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.image_fragment);
         viewPager = (ViewPager)findViewById(R.id.pager);
-        ImagePageAdapter adapter = new ImagePageAdapter(getSupportFragmentManager(), ImageInfoProvider.getInstance().getDataList());
+        ArrayList<ImageInfo> dataList = ImageInfoProvider.getInstance().getDataList();
+        adapter = new ImagePageAdapter(getSupportFragmentManager(), dataList);
         viewPager.setAdapter(adapter);
         viewPager.setOffscreenPageLimit(1);
         viewPager.setClickable(true);
@@ -70,8 +73,11 @@ public class DetailActivity extends FragmentActivity
     {
         public boolean onSingleTapUp(MotionEvent e)
         {
-            String test = "hello from " + bluetoothAdapter.getName();
-            bluetoothService.write(test.getBytes());
+            int position = viewPager.getCurrentItem();
+            ImageInfo info = ImageInfoProvider.getInstance().getDataList().get(position);
+            String shareURL = info.getFullSizeUrl();
+//            String test = "hello from " + bluetoothAdapter.getName();
+            bluetoothService.write(shareURL.getBytes());
             return true;
         };
     };
@@ -147,7 +153,10 @@ public class DetailActivity extends FragmentActivity
                 {
                     int length = msg.arg1;
                     String s = new String(data.array(), 0, length);
-                    Toast.makeText(DetailActivity.this, s, Toast.LENGTH_SHORT).show();
+                    int position = viewPager.getCurrentItem();
+                    ImageDetailFragment fragment = (ImageDetailFragment)adapter.instantiateItem(viewPager, position);
+                    fragment.setShareURL(s);
+                    Toast.makeText(DetailActivity.this, "start fetching the shared image...", Toast.LENGTH_SHORT).show();
                 }
                 break;
 
@@ -177,6 +186,19 @@ public class DetailActivity extends FragmentActivity
         public int getCount()
         {
             return dataList.size();
+        }
+        
+        @Override
+        public Object instantiateItem(ViewGroup container, int position)
+        {
+            return super.instantiateItem(container, position);
+        }
+
+        @Override
+        public void destroyItem(ViewGroup container, int position, Object object)
+        {
+            // TODO Auto-generated method stub
+            super.destroyItem(container, position, object);
         }
     }
     

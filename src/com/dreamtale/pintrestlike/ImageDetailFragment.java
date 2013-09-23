@@ -48,6 +48,18 @@ public class ImageDetailFragment extends Fragment
         downloader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, "");
     }
     
+    public void setShareURL(String url)
+    {
+        if (null != downloader)
+        {
+            downloader.cancel(true);
+        }
+        imageView.setImageResource(R.drawable.empty_photo);
+        imageView.setTag(url);
+        downloader = new ImageDownloader(imageView);
+        downloader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, "");
+    }
+    
     @Override
     public void onDestroyView()
     {
