@@ -3,6 +3,7 @@ package com.dreamtale.pintrestlike.activity;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -49,6 +50,10 @@ public class DetailActivity extends FragmentActivity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.image_fragment);
+        
+        final ActionBar actionBar = getActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        
         viewPager = (ViewPager)findViewById(R.id.pager);
         ArrayList<ImageInfo> dataList = ImageInfoProvider.getInstance().getDataList();
         adapter = new ImagePageAdapter(getSupportFragmentManager(), dataList);
@@ -140,6 +145,9 @@ public class DetailActivity extends FragmentActivity
         case R.id.action_discoverable:
             makeDeviceDiscoverable();
             break;
+        case android.R.id.home:
+            finish();
+            break;
         default:
             break;
         }
@@ -204,6 +212,13 @@ public class DetailActivity extends FragmentActivity
         {
             // TODO Auto-generated method stub
             super.destroyItem(container, position, object);
+        }
+        
+        @Override
+        public void finishUpdate(ViewGroup container)
+        {
+            // TODO Auto-generated method stub
+            super.finishUpdate(container);
         }
     }
     

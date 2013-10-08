@@ -180,7 +180,10 @@ public class BluetoothService
             BluetoothSocket socket = null;
             try
             {
-                socket = serverSocket.accept();
+                if (null != serverSocket)
+                {
+                    socket = serverSocket.accept();
+                }
             }
             catch (IOException e)
             {
